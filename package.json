@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "botkit": "^0.6.7",
+    "express": "^4.16.2",
+    "https": "^1.0.0",
+    "request": "^2.83.0",
+    "request-promise-native": "^1.0.5"
+  }
+}
