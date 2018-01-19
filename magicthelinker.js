@@ -29,10 +29,34 @@ exports.fn = {
             controller
                 .createHomepageEndpoint(controller.webserver)
                 .createOauthEndpoints(controller.webserver,function(err,req,res) {
-                    console.log('Could not create Oauth enpoint');
-                    console.log(err);
+                    if (err) {
+                        res.status(500).send('ERROR: ' + err);
+                    } else {
+                        res.send('Success!');
+                    }
                 })
                 .createWebhookEndpoints(controller.webserver);
+
+        });
+
+        var _bots = {};
+        function trackBot(bot) {
+            _bots[bot.config.token] = bot;
+        }
+
+        controller.startTicking();
+
+        controller.on('create_bot',function(bot,config) {
+
+            if (_bots[bot.config.token]) {
+                // already online! do nothing.
+            } else {
+                bot.startRTM(function(err) {
+                    if (!err) {
+                        trackBot(bot);
+                    }
+                });
+            }
 
         });
 
