@@ -3,7 +3,6 @@
 const Botkit = require('botkit');
 const request = require('request-promise-native');
 
-const slack_token = TOKEN
 exports.fn = {
     /**
      * Starts Slack-Bot
@@ -13,18 +12,30 @@ exports.fn = {
     slackBot() {
         // initialisation
         const controller = Botkit.slackbot({
+            stats_optout: true,
             require_delivery: true
         });
-        const slackBot = controller.spawn({
-            token: slack_token
+
+        controller.configureSlackApp({
+            clientId: process.env.clientId,
+            clientSecret: process.env.clientSecret,
+            redirectUri: 'ec2-18-218-105-208.us-east-2.compute.amazonaws.com',
+            scopes: ['incoming-webhook','team:read','users:read','channels:read','im:read','im:write','groups:read','emoji:read','chat:write:bot']
         });
-        // create rtm connection
-        slackBot.startRTM((err, bot, payload) => {
-            if (err) {
-                throw new Error('Could not connect to Slack');
-            }
-            controller.log('Slack connection established.');
+
+        controller.setupWebserver(process.env.port,function(err,webserver) {
+
+            // set up web endpoints for oauth, receiving webhooks, etc.
+            controller
+                .createHomepageEndpoint(controller.webserver)
+                .createOauthEndpoints(controller.webserver,function(err,req,res) {
+                    console.log('Could not create Oauth enpoint');
+                    console.log(err);
+                })
+                .createWebhookEndpoints(controller.webserver);
+
         });
+
         var re = /\[\[([^\]]+)\]\]/g;
 
         controller.hears(['.*\\[\\[[^\\]]+\\]\\].*'],['direct_message','direct_mention','ambient'], function(bot, message) {
