@@ -35,17 +35,25 @@ exports.fn = {
                 if (match) {
                     promises.push(request('https://api.scryfall.com/cards/named?fuzzy=' + encodeURIComponent(match[1]), { json: true }).then(function(body) {
                         if (body.object && body.object === 'card') {
-                            return body.image_uris.normal;
+                            var response = {
+                                "fallback": body.name,
+                                "color": "#acacac",
+                                "title": body.name,
+                                "image_url": body.image_uris.normal
+                            }
+                            return response;
                         }
                     }).catch(function(err) {
-                        console.log(err);
-                        return "";
+                        return undefined;
                     }));
                 }
             } while (match);
 
             Promise.all(promises).then(function(values) {
-                bot.reply(message,values.join(' '));
+                values = values.filter(function(n){ return n != undefined });
+                bot.reply(message, {
+                    attachments: values
+                });
             });
         });
     }
